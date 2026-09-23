@@ -1,0 +1,8 @@
+# Large upstream clones used only for local validation; keep the repository lean for GitHub.
+copybara/
+opentelemetry-collector-contrib/
+internal-otel-contrib/
+# Local generated artifacts
+.bazel-cache/
+.bazelrc.local
+*.log

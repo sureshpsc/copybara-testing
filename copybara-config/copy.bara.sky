@@ -1,0 +1,44 @@
+source_url = "https://github.com/open-telemetry/opentelemetry-collector-contrib.git"
+source_ref = "main"
+destination_url = "file:///C:/Users/sures/copybara-testing/internal-otel-contrib"
+internal_module_prefix = "github.com/acme/opentelemetry-collector-contrib"
+
+core.workflow(
+    name = "sync_otel_contrib_go_packages",
+    origin = git.origin(
+        url = source_url,
+        ref = source_ref,
+    ),
+    destination = git.destination(
+        url = destination_url,
+        fetch = source_ref,
+        push = source_ref,
+    ),
+    origin_files = glob([
+        "go.mod",
+        "go.sum",
+        "go.work",
+        "go.work.sum",
+        "**/*.go",
+        "**/*.mod",
+        "**/*.sum",
+        "**/*.yaml",
+        "**/*.yml",
+        "**/*.md",
+    ]),
+    destination_files = glob(["**"]),
+    authoring = authoring.pass_thru("Copybara Bot <copybara@example.com>"),
+    transformations = [
+        core.replace(
+            before = "github.com/open-telemetry/opentelemetry-collector-contrib",
+            after = internal_module_prefix,
+            paths = glob(["**/*.go", "**/*.mod", "**/*.sum", "**/*.yaml", "**/*.yml", "**/*.md"]),
+        ),
+        core.replace(
+            before = "github.com/open-telemetry/opentelemetry-collector",
+            after = "github.com/acme/opentelemetry-collector",
+            paths = glob(["**/*.go", "**/*.mod", "**/*.sum", "**/*.yaml", "**/*.yml", "**/*.md"]),
+        ),
+    ],
+    mode = "SQUASH",
+)
