@@ -1,0 +1,6 @@
+[submodule "copybara"]
+	path = copybara
+	url = https://github.com/google/copybara.git
+[submodule "opentelemetry-collector-contrib"]
+	path = opentelemetry-collector-contrib
+	url = https://github.com/open-telemetry/opentelemetry-collector-contrib.git
