@@ -1,0 +1,8 @@
+version: 1
+repository:
+  ignore:
+    - '**/vendor/**'
+    - '**/.venv/**'
+    - '**/node_modules/**'
+    # Recipe fixtures import the new library path on purpose; they are not callers to fix.
+    - 'recipes/**'

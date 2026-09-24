@@ -1,0 +1,73 @@
+# Copybara config for the test monorepo demo.
+#
+# test/demo.ps1 setup writes test/out/copy.bara.sky from this file, with file:///TEST_DIR
+# replaced by this folder's real path. Run Copybara and evolvectl on that generated copy.
+
+# The internal monorepo (a local bare repository made by demo.ps1 setup).
+monorepo_url = "file:///TEST_DIR/out/monorepo.git"
+
+# gax-go: the monorepo has the 2016 copy in third_party/gax-go today.
+gax_url = "https://github.com/googleapis/gax-go.git"
+gax_ref = "v2.0.2"
+
+# acme/retry: the demo library, tags v1.0.0 and v2.0.0 (a local repository made by demo.ps1 setup).
+retry_url = "file:///TEST_DIR/out/acme-retry"
+retry_ref = "v2.0.0"
+
+# Bring only the gax-go source files the monorepo builds, not the tests, into third_party/gax-go/v2.
+core.workflow(
+    name = "import_gax_go",
+    origin = git.origin(
+        url = gax_url,
+        ref = gax_ref,
+    ),
+    origin_files = glob([
+        "LICENSE",
+        "v2/call_option.go",
+        "v2/gax.go",
+        "v2/header.go",
+        "v2/invoke.go",
+        "v2/go.mod",
+        "v2/go.sum",
+    ]),
+    destination = git.destination(
+        url = monorepo_url,
+        fetch = "main",
+        push = "main",
+    ),
+    # Only this folder belongs to the import; the rest of the monorepo is left alone.
+    destination_files = glob(["third_party/gax-go/v2/**"]),
+    authoring = authoring.pass_thru("Import Bot <import-bot@example.com>"),
+    mode = "SQUASH",
+    transformations = [
+        core.move("LICENSE", "third_party/gax-go/v2/LICENSE", overwrite = True),
+        core.move("v2", "third_party/gax-go/v2", overwrite = True),
+    ],
+)
+
+# Bring only the acme/retry source files, not the tests or README, into third_party/acme-retry/v2.
+core.workflow(
+    name = "import_acme_retry",
+    origin = git.origin(
+        url = retry_url,
+        ref = retry_ref,
+    ),
+    origin_files = glob([
+        "LICENSE",
+        "go.mod",
+        "retry.go",
+    ]),
+    destination = git.destination(
+        url = monorepo_url,
+        fetch = "main",
+        push = "main",
+    ),
+    destination_files = glob(["third_party/acme-retry/v2/**"]),
+    authoring = authoring.pass_thru("Import Bot <import-bot@example.com>"),
+    mode = "SQUASH",
+    transformations = [
+        core.move("LICENSE", "third_party/acme-retry/v2/LICENSE", overwrite = True),
+        core.move("go.mod", "third_party/acme-retry/v2/go.mod", overwrite = True),
+        core.move("retry.go", "third_party/acme-retry/v2/retry.go", overwrite = True),
+    ],
+)

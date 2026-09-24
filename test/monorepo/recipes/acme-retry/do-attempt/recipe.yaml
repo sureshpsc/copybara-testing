@@ -1,0 +1,34 @@
+apiVersion: evolvectl.dev/v1alpha1
+kind: MigrationRecipe
+metadata:
+  id: acme.retry.do-attempt
+  title: Add the attempt parameter to functions passed to retry.Do
+  owners:
+    - platform-team
+  tags:
+    - go
+    - acme-retry
+spec:
+  language: go
+  dependency:
+    ecosystem: gomod
+    name: github.com/acme/retry
+    from: "<2.0.0"
+    to: ">=2.0.0"
+  match:
+    type: call
+    package: github.com/acme/retry/v2
+    symbol: Do
+  transform:
+    type: callback_param_append
+    callback:
+      index: 2
+      name: _
+      type: int
+      when_params: 1
+  safety:
+    confidence: high
+    generated_files: deny
+    require_type_info: false
+  validate:
+    - gofmt

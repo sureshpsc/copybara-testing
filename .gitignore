@@ -2,3 +2,8 @@
 .bazel-cache/
 .bazelrc.local
 *.log
+
+# Created on each machine by scripts/gax-import.ps1
+internal-otel-contrib/
+out/
+.evolvectl/

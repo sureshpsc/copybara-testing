@@ -1,0 +1,30 @@
+apiVersion: evolvectl.dev/v1alpha1
+kind: MigrationRecipe
+metadata:
+  id: acme.retry.default-config
+  title: Rename retry.DefaultConfig to retry.Default
+  owners:
+    - platform-team
+  tags:
+    - go
+    - acme-retry
+spec:
+  language: go
+  dependency:
+    ecosystem: gomod
+    name: github.com/acme/retry
+    from: "<2.0.0"
+    to: ">=2.0.0"
+  match:
+    type: call
+    package: github.com/acme/retry/v2
+    symbol: DefaultConfig
+  transform:
+    type: call_rename
+    target_symbol: Default
+  safety:
+    confidence: high
+    generated_files: deny
+    require_type_info: false
+  validate:
+    - gofmt

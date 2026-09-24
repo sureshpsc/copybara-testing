@@ -1,8 +1,16 @@
 source_url = "https://github.com/open-telemetry/opentelemetry-collector-contrib.git"
 source_ref = "main"
+# scripts/gax-import.ps1 overrides this with --git-destination-url, so the file works on any machine.
 destination_url = "file:///C:/Users/sures/copybara-testing/internal-otel-contrib"
 internal_module_prefix = "github.com/acme/opentelemetry-collector-contrib"
 
+# gax-go is what the otel Google Cloud components call:
+#   receiver/googlecloudpubsubreceiver, exporter/googlecloudpubsubexporter,
+#   confmap/provider/googlesecretmanagerprovider require github.com/googleapis/gax-go/v2 v2.24.1.
+gax_url = "https://github.com/googleapis/gax-go.git"
+gax_ref = "v2.24.1"
+
+# Workflow 1: mirror the otel monorepo into the internal destination.
 core.workflow(
     name = "sync_otel_contrib_go_packages",
     origin = git.origin(
@@ -26,7 +34,8 @@ core.workflow(
         "**/*.yml",
         "**/*.md",
     ]),
-    destination_files = glob(["**"]),
+    # third_party/ at the top belongs to the import workflows below; this sync must not delete it.
+    destination_files = glob(["**"], exclude = ["third_party/**"]),
     authoring = authoring.pass_thru("Copybara Bot <copybara@example.com>"),
     transformations = [
         core.replace(
@@ -41,4 +50,46 @@ core.workflow(
         ),
     ],
     mode = "SQUASH",
+)
+
+# Workflow 2: import gax-go into third_party/gax-go/v2 of the same destination.
+# Only third_party/gax-go/v2 is owned by this workflow, so the otel files are left alone.
+core.workflow(
+    name = "import_gax_go",
+    origin = git.origin(
+        url = gax_url,
+        ref = gax_ref,
+    ),
+    origin_files = glob(["v2/**", "LICENSE"]),
+    destination = git.destination(
+        url = destination_url,
+        fetch = "main",
+        push = "main",
+    ),
+    destination_files = glob(["third_party/gax-go/v2/**"]),
+    authoring = authoring.pass_thru("Import Bot <import-bot@example.com>"),
+    mode = "SQUASH",
+    transformations = [
+        core.move("LICENSE", "third_party/gax-go/v2/LICENSE", overwrite = True),
+        core.move("v2", "third_party/gax-go/v2", overwrite = True),
+    ],
+)
+
+# Workflow 3: the same import into a plain folder. No destination repository is needed:
+#   copybara migrate copy.bara.sky import_gax_go_folder --folder-dir out/gax-go
+core.workflow(
+    name = "import_gax_go_folder",
+    origin = git.origin(
+        url = gax_url,
+        ref = gax_ref,
+    ),
+    origin_files = glob(["v2/**", "LICENSE"]),
+    destination = folder.destination(),
+    destination_files = glob(["third_party/gax-go/v2/**"]),
+    authoring = authoring.pass_thru("Import Bot <import-bot@example.com>"),
+    mode = "SQUASH",
+    transformations = [
+        core.move("LICENSE", "third_party/gax-go/v2/LICENSE", overwrite = True),
+        core.move("v2", "third_party/gax-go/v2", overwrite = True),
+    ],
 )
